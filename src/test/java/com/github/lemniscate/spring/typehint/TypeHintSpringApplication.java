@@ -26,5 +26,5 @@ public class TypeHintSpringApplication extends SpringApplication {
         Assert.isInstanceOf(AbstractApplicationContext.class, result, "Cannot hijack a non-AbstractApplicationContext");
         TypeHintListableBeanFactory.hijack(((AbstractApplicationContext) result));
         return result;
-    };
+    }
 }
