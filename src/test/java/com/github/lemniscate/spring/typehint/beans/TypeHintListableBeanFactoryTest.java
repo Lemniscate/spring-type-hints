@@ -1,5 +1,6 @@
 package com.github.lemniscate.spring.typehint.beans;
 
+import com.github.lemniscate.spring.typehint.HasTypeHints;
 import com.github.lemniscate.spring.typehint.TypeHintSpringApplication;
 import com.github.lemniscate.spring.typehint.annotation.TypeHints;
 import com.github.lemniscate.spring.typehint.beans.TypeHintListableBeanFactory;
@@ -66,6 +67,15 @@ public class TypeHintListableBeanFactoryTest {
         }
     }
 
+    @Configuration
+    public static class HasTypeHintsConfig extends BasicConfig{
+        @Bean
+        @Override
+        public Service<String> concreteStringService() {
+            return new HasTypeHintService("Type hinted");
+        }
+    }
+
 
     @Before
     public void before(){
@@ -89,6 +99,14 @@ public class TypeHintListableBeanFactoryTest {
     @Test
     public void testPrimaryConfig() throws Throwable {
         bf.registerBeanDefinition("conf", new RootBeanDefinition(PrimaryConfig.class));
+        ctx.refresh();
+        Object client = ctx.getBean(TypedClient.class);
+        Assert.notNull(client);
+    }
+
+    @Test
+    public void testHasTypeHintsConfig() throws Throwable {
+        bf.registerBeanDefinition("conf", new RootBeanDefinition(HasTypeHintsConfig.class));
         ctx.refresh();
         Object client = ctx.getBean(TypedClient.class);
         Assert.notNull(client);
@@ -136,6 +154,18 @@ public class TypeHintListableBeanFactoryTest {
     public static class StringService extends ServiceImpl<String>{
         public StringService(String s) {
             super(s);
+        }
+    }
+
+    public static class HasTypeHintService extends ServiceImpl<String> implements HasTypeHints{
+
+        public HasTypeHintService(String s) {
+            super(s);
+        }
+
+        @Override
+        public Class<?>[] getTypeHints() {
+            return new Class<?>[]{String.class};
         }
     }
 
