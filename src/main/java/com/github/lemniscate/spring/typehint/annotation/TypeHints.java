@@ -9,5 +9,9 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TypeHints{
     Class<?>[] value() default {};
-    String staticMethodName() default "";
+    Class<? extends TypeHintResolver> resolver() default TypeHintResolver.class;
+
+    public static interface TypeHintResolver{
+        Class<?>[] getTypeHints(Class<?> source, Class<?> type);
+    }
 }

@@ -171,11 +171,15 @@ public class TypeHintListableBeanFactoryTest {
     public static class TypedClient<T> {
         @Autowired
 //        @TypeHints({String.class})
-        @TypeHints(staticMethodName = "getMyTypeHints")
+        @TypeHints(resolver = Resolver.class)
         private Service<T> service;
 
-        public static Class<?>[] getMyTypeHints(Class<?> type){
-            return new Class<?>[]{String.class};
+        public static class Resolver implements TypeHints.TypeHintResolver {
+
+            @Override
+            public Class<?>[] getTypeHints(Class<?> source, Class<?> type) {
+                return new Class<?>[]{String.class};
+            }
         }
     }
 
