@@ -5,11 +5,13 @@ import com.github.lemniscate.spring.typehint.annotation.TypeHints;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.TypeConverter;
+import org.springframework.beans.*;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
+import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.DependencyDescriptor;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -18,6 +20,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -26,13 +29,18 @@ import java.util.*;
  */
 public class TypeHintListableBeanFactory extends DefaultListableBeanFactory {
 
-    // TODO verify not multi-threaded and single entry point
-    // this is evil, but I need a win...
-    private Class<?> currentBeanType = null;
+    private final Map<String, Class<?>> registry = new HashMap<>();
+
+    @Override
+    protected Object createBean(String beanName, RootBeanDefinition mbd, Object[] args) throws BeanCreationException {
+        if( registry.get(beanName) == null ) {
+            registry.put(beanName, mbd.getTargetType());
+        }
+        return super.createBean(beanName, mbd, args);
+    }
 
     @Override
     protected Object doCreateBean(String beanName, RootBeanDefinition mbd, Object[] args) {
-        currentBeanType = mbd.getTargetType();
         return super.doCreateBean(beanName, mbd, args);
     }
 
@@ -50,8 +58,11 @@ public class TypeHintListableBeanFactory extends DefaultListableBeanFactory {
                 Class<?>[] srcHints = null;
                 // load our hints from the supplied static hint resolver
                 if( !TypeHints.TypeHintResolver.class.equals(hints.resolver()) ) {
+                    Class<?> sourceType = registry.get(beanName);
+                    Assert.notNull(sourceType);
+
                     TypeHints.TypeHintResolver resolver = BeanUtils.instantiate(hints.resolver());
-                    srcHints = resolver.getTypeHints(currentBeanType, requiredType);
+                    srcHints = resolver.getTypeHints(sourceType, requiredType);
                 }
 
                 // still no hints? grab whatever the annotation had

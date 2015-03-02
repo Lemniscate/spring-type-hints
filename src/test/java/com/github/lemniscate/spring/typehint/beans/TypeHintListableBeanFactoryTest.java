@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -124,7 +125,7 @@ public class TypeHintListableBeanFactoryTest {
         }
     }
 
-//    @Test
+    @Test
     public void testSpringApplicationExample(){
         new TypeHintSpringApplication(BasicConfig.class).run();
     }
