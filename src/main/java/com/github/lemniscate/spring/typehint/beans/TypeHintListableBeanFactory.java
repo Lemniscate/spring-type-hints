@@ -58,7 +58,16 @@ public class TypeHintListableBeanFactory extends DefaultListableBeanFactory {
                 Class<?>[] srcHints = null;
                 // load our hints from the supplied static hint resolver
                 if( !TypeHints.TypeHintResolver.class.equals(hints.resolver()) ) {
-                    Class<?> sourceType = registry.get(beanName);
+                    Class<?> sourceType = null;
+                    try{
+                        Object instance = getBean(beanName);
+                        if( AopUtils.isJdkDynamicProxy(instance) ){
+                            sourceType = ((Advised) instance).getTargetClass();
+                        }else{
+                            sourceType = instance.getClass();
+                        }
+                    }catch(Exception exc){}
+                    sourceType = sourceType == null ? registry.get(beanName) : sourceType;
                     Assert.notNull(sourceType);
 
                     TypeHints.TypeHintResolver resolver = BeanUtils.instantiate(hints.resolver());
