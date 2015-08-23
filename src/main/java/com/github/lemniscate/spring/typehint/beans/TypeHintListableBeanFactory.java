@@ -3,24 +3,20 @@ package com.github.lemniscate.spring.typehint.beans;
 import com.github.lemniscate.spring.typehint.TypeHintingDependency;
 import com.github.lemniscate.spring.typehint.annotation.TypeHints;
 import org.springframework.aop.framework.Advised;
-import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.*;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
-import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.DependencyDescriptor;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -34,7 +30,15 @@ public class TypeHintListableBeanFactory extends DefaultListableBeanFactory {
     @Override
     protected Object createBean(String beanName, RootBeanDefinition mbd, Object[] args) throws BeanCreationException {
         if( registry.get(beanName) == null ) {
-            registry.put(beanName, mbd.getTargetType());
+            Class<?> type = mbd.getTargetType();
+            if( type == null && mbd.getBeanClassName() != null){
+                try {
+                    type = Class.forName(mbd.getBeanClassName());
+                } catch (ClassNotFoundException e) {
+                    throw new BeanCreationException("Error while failing over to BeanClassName for registry", e);
+                }
+            }
+            registry.put(beanName, type);
         }
         return super.createBean(beanName, mbd, args);
     }
